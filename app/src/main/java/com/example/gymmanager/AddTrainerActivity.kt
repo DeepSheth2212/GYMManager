@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gymmanager.Adapters.AddTrainerListAdapter
+import com.example.gymmanager.Adapters.ItemClicked
 import com.example.gymmanager.Model.Trainer
 import com.example.gymmanager.databinding.ActivityAddTrainerBinding
 import com.google.firebase.database.DataSnapshot
@@ -13,7 +14,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class AddTrainerActivity : AppCompatActivity() {
+class AddTrainerActivity : AppCompatActivity() , ItemClicked {
 
     private lateinit var binding : ActivityAddTrainerBinding
     private var trainerList = mutableListOf<Trainer>()
@@ -25,7 +26,7 @@ class AddTrainerActivity : AppCompatActivity() {
         binding = ActivityAddTrainerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = AddTrainerListAdapter(trainerList)
+        adapter = AddTrainerListAdapter(trainerList,this)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
@@ -33,12 +34,14 @@ class AddTrainerActivity : AppCompatActivity() {
 
         binding.addBtn.setOnClickListener {
             val trainerName = binding.trainerName.text.toString()
-            addTrainer(Trainer(trainerName))
+            addTrainer(Trainer(trainerName,false))
         }
+
+
     }
 
     private fun addTrainer(trainer : Trainer) {
-        dbref.push().setValue(trainer).addOnCompleteListener {
+        dbref.child(trainer.name.toString()).setValue(trainer).addOnCompleteListener {
             if(it.isSuccessful) {
                 Toast.makeText(this, "Trainer added successfully!", Toast.LENGTH_SHORT).show()
                 getList()
@@ -64,4 +67,9 @@ class AddTrainerActivity : AppCompatActivity() {
             }
         })
     }
+
+    override fun onRemoveClicked(trainer: Trainer) {
+        dbref.child(trainer.name.toString()).removeValue()
+    }
 }
+
